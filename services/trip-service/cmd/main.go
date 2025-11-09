@@ -3,55 +3,51 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	h "ride-sharing/services/trip-service/internal/infrastructure/http"
-	"ride-sharing/services/trip-service/internal/infrastructure/repository"
-	"ride-sharing/services/trip-service/internal/service"
+	"google.golang.org/grpc"
 )
 
+var GrpcAddr = ":9093"
+
 func main() {
-	inmemRepo := repository.NewInmemRepository()
-	svc := service.NewService(inmemRepo)
-	mux := http.NewServeMux()
+	// inmemRepo := // repository.NewInmemRepository()
+	// svc := service.NewService(inmemRepo)
 
-	httphandler := h.HttpHandler{Service: svc}
-
-	mux.HandleFunc("POST /preview", httphandler.HandleTripPreview)
-
-	server := &http.Server{
-		Addr:    ":8083",
-		Handler: mux,
-	}
-
-	serverErrors := make(chan error, 1)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	go func() {
-		log.Printf("Server listening on %s", server.Addr)
-		serverErrors <- server.ListenAndServe()
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+		<-sigCh
+		cancel()
 	}()
 
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+	lis, err := net.Listen("tcp", GrpcAddr)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
 
-	select {
-	case err := <-serverErrors:
-		log.Printf("Error starting server: %v", err)
+	grpcServer := grpcserver.NewServer()
 
-	case sig := <-shutdown:
-		log.Printf("Server is shutting down due to %v signal", sig)
+	// TODO initialize our grpc handler implementation
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+	log.Printf("Starting gRPC server Trip service on port %s", lis.Addr().String())
 
-		if err := server.Shutdown(ctx); err != nil {
-			log.Printf("Could not stop server gracefully: %v", err)
-			server.Close()
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Printf("failed to serve: %v", err)
+			cancel()
 		}
 
-	}
+		}()
+
+		// wait for the shutdown signal
+		<-ctx.Done()
+		log.Println("Shutting down the server...")
+		grpcServer.GracefulStop()
 }

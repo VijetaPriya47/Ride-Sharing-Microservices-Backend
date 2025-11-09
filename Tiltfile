@@ -42,8 +42,6 @@ k8s_resource('api-gateway', port_forwards=8081,
 ### End of API Gateway ###
 ### Trip Service ###
 
-# Uncomment once we have a trip service
-
 trip_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/trip-service ./services/trip-service/cmd/main.go'
 if os.name == 'nt':
  trip_compile_cmd = './infra/development/docker/trip-build.bat'

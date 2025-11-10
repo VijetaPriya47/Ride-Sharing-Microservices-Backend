@@ -78,7 +78,7 @@ func handleDriversWebSocket(w http.ResponseWriter, r *http.Request) {
 		})
 
 		driverService.Close()
-		
+
 		log.Println("Driver unregistered: ", userID)
 	}()
 

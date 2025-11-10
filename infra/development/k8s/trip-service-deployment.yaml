@@ -16,14 +16,20 @@ spec:
         - name: trip-service
           image: ride-sharing/trip-service
           ports:
-            - containerPort: 8083
+            - containerPort: 9093
           resources:
             requests:
-              memory: "64Mi"
-              cpu: "100m"
+              memory: "32Mi"
+              cpu: "50m"
             limits:
-              memory: "128Mi"
-              cpu: "200m"
+              memory: "96Mi"
+              cpu: "100m"
+          env:
+            - name: RABBITMQ_URI
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: uri
 ---
 apiVersion: v1
 kind: Service
@@ -33,7 +39,7 @@ spec:
   selector:
     app: trip-service
   ports:
-    - port: 8083
-      name: http
-      targetPort: 8083
+    - port: 9093
+      name: grpc
+      targetPort: 9093
   type: ClusterIP

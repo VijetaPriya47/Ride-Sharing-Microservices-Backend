@@ -5,23 +5,25 @@ WORKDIR /app
 
 COPY web/package*.json ./
 
-RUN npm ci
+RUN npm ci --omit=dev
 
 COPY web ./
 
 RUN npm run build
 
-# Production stage
+# Production stage  
 FROM node:20-alpine
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+# Copy only production dependencies and build output
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/src ./src
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["npm", "start"]

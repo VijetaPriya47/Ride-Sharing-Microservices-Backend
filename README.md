@@ -2,7 +2,7 @@
 
 A production-oriented microservices architecture for a ride-sharing platform, implementing real-time driver matching, route optimization, and payment processing. Built with Go, gRPC, RabbitMQ, and deployed on Kubernetes.
 
-> **Learning Journey**: Developed as part of a comprehensive microservices course by [Tiago Taquelim](https://github.com/SelfMadeEngineerCode/), with additional enhancements and production considerations.
+
 
 ## 🎯 Project Overview
 

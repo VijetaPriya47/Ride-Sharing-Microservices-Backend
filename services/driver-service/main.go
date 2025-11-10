@@ -1,6 +1,5 @@
 package main
 
-
 import (
 	"context"
 	"log"
@@ -14,11 +13,10 @@ import (
 
 var GrpcAddr = ":9092"
 
-
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	go func() {
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
@@ -32,6 +30,14 @@ func main() {
 	}
 
 	svc := NewService()
+
+	// TODO: RabbitMQ connection - implement messaging package
+	// rabbitmq, err := messaging.NewRabbitMQ(rabbitMqURI)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	defer rabbitmq.Close()
+	// log.Println("Starting RabbitMQ connection")
 
 	// Starting the gRPC server
 	grpcServer := grpcserver.NewServer()

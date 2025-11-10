@@ -25,7 +25,6 @@ func NewRabbitMQ(uri string) (*RabbitMQ, error) {
 		return nil, fmt.Errorf("failed to create channel: %v", err)
 	}
 
-
 	rmq := &RabbitMQ{
 		conn:    conn,
 		Channel: ch,
@@ -36,7 +35,6 @@ func NewRabbitMQ(uri string) (*RabbitMQ, error) {
 		rmq.Close()
 		return nil, fmt.Errorf("failed to setup exchanges and queues: %v", err)
 	}
-
 
 	return rmq, nil
 }
@@ -68,7 +66,6 @@ func (r *RabbitMQ) setupExchangesAndQueues() error {
 
 	return nil
 }
-
 
 func (r *RabbitMQ) Close() {
 	if r.conn != nil {

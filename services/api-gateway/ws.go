@@ -7,14 +7,14 @@ import (
 	"ride-sharing/services/api-gateway/grpc_clients"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/messaging"
-	pb "ride-sharing/shared/proto/driver"
+	"ride-sharing/shared/proto/driver"
 )
 
 var (
 	connManager = messaging.NewConnectionManager()
 )
 
-func handleRidersWebSocket(w http.ResponseWriter, r *http.Request) {
+func handleRidersWebSocket(w http.ResponseWriter, r *http.Request, rb *messaging.RabbitMQ) {
 	conn, err := connManager.Upgrade(w, r)
 	if err != nil {
 		log.Printf("WebSocket upgrade failed: %v", err)
@@ -58,8 +58,8 @@ func handleRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleDriversWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+func handleDriversWebSocket(w http.ResponseWriter, r *http.Request, rb *messaging.RabbitMQ) {
+	conn, err := connManager.Upgrade(w, r)
 	if err != nil {
 		log.Printf("WebSocket upgrade failed: %v", err)
 		return
@@ -93,7 +93,7 @@ func handleDriversWebSocket(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		connManager.Remove(userID)
 
-		driverService.Client.UnregisterDriver(ctx, &pb.RegisterDriverRequest{
+		driverService.Client.UnregisterDriver(ctx, &driver.RegisterDriverRequest{
 			DriverID:    userID,
 			PackageSlug: packageSlug,
 		})
@@ -103,7 +103,7 @@ func handleDriversWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Println("Driver unregistered: ", userID)
 	}()
 
-	driverData, err := driverService.Client.RegisterDriver(ctx, &pb.RegisterDriverRequest{
+	driverData, err := driverService.Client.RegisterDriver(ctx, &driver.RegisterDriverRequest{
 		DriverID:    userID,
 		PackageSlug: packageSlug,
 	})

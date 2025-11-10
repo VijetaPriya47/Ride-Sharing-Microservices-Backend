@@ -151,7 +151,6 @@ func (r *RabbitMQ) setupExchangesAndQueues() error {
 		TripExchange,
 	); err != nil {
 		return err
-
 	}
 
 	if err := r.declareAndBindQueue(
@@ -193,6 +192,7 @@ func (r *RabbitMQ) declareAndBindQueue(queueName string, messageTypes []string, 
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	for _, msg := range messageTypes {
 		if err := r.Channel.QueueBind(
 			q.Name,   // queue name
@@ -204,6 +204,7 @@ func (r *RabbitMQ) declareAndBindQueue(queueName string, messageTypes []string, 
 			return fmt.Errorf("failed to bind queue to %s: %v", queueName, err)
 		}
 	}
+
 	return nil
 }
 

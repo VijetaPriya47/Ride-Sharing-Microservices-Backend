@@ -25,7 +25,6 @@ func (p *previewTripRequest) toProto() *pb.PreviewTripRequest {
 	}
 }
 
-
 type startTripRequest struct {
 	RideFareID string `json:"rideFareID"`
 	UserID     string `json:"userID"`

@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"ride-sharing/services/trip-service/internal/domain"
-"ride-sharing/services/trip-service/internal/infrastructure/events"
+	"ride-sharing/services/trip-service/internal/infrastructure/events"
 	pb "ride-sharing/shared/proto/trip"
 	"ride-sharing/shared/types"
 
@@ -15,10 +15,10 @@ import (
 
 type gRPCHandler struct {
 	pb.UnimplementedTripServiceServer
+
 	service   domain.TripService
 	publisher *events.TripEventPublisher
 }
-
 
 func NewGRPCHandler(server *grpc.Server, service domain.TripService, publisher *events.TripEventPublisher) *gRPCHandler {
 	handler := &gRPCHandler{
@@ -47,7 +47,6 @@ func (h *gRPCHandler) CreateTrip(ctx context.Context, req *pb.CreateTripRequest)
 	if err := h.publisher.PublishTripCreated(ctx, trip); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to publish the trip created event: %v", err)
 	}
-
 
 	return &pb.CreateTripResponse{
 		TripID: trip.ID.Hex(),

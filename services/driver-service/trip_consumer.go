@@ -24,8 +24,8 @@ func NewTripConsumer(rabbitmq *messaging.RabbitMQ, service *Service) *tripConsum
 }
 
 func (c *tripConsumer) Listen() error {
-	return c.rabbitmq.ConsumeMessages("hello", func(ctx context.Context, msg amqp091.Delivery) error {
-
+	return c.rabbitmq.ConsumeMessages(messaging.FindAvailableDriversQueue, func(ctx context.Context, msg amqp091.Delivery) error {
+		var tripEvent contracts.AmqpMessage
 		if err := json.Unmarshal(msg.Body, &tripEvent); err != nil {
 			log.Printf("Failed to unmarshal message: %v", err)
 			return err
@@ -38,6 +38,7 @@ func (c *tripConsumer) Listen() error {
 		}
 
 		log.Printf("driver received message: %+v", payload)
+
 		switch msg.RoutingKey {
 		case contracts.TripEventCreated, contracts.TripEventDriverNotInterested:
 			return c.handleFindAndNotifyDrivers(ctx, payload)

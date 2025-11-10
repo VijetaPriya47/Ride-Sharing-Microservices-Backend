@@ -27,24 +27,20 @@ func NewService() *Service {
 }
 
 func (s *Service) FindAvailableDrivers(packageType string) []string {
-		var matchingDrivers []string
-	
-		for _, driver := range s.drivers {
-			if driver.Driver.PackageSlug == packageType {
-				matchingDrivers = append(matchingDrivers, driver.Driver.Id)
-			}
+	var matchingDrivers []string
+
+	for _, driver := range s.drivers {
+		if driver.Driver.PackageSlug == packageType {
+			matchingDrivers = append(matchingDrivers, driver.Driver.Id)
 		}
-	
-		if len(matchingDrivers) == 0 {
-			return []string{}
-		}
-	
-		return matchingDrivers
 	}
-	
 
+	if len(matchingDrivers) == 0 {
+		return []string{}
+	}
 
-
+	return matchingDrivers
+}
 
 func (s *Service) RegisterDriver(driverId string, packageSlug string) (*pb.Driver, error) {
 	s.mu.Lock()
@@ -80,11 +76,9 @@ func (s *Service) UnregisterDriver(driverId string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	
 	for i, driver := range s.drivers {
 		if driver.Driver.Id == driverId {
 			s.drivers = append(s.drivers[:i], s.drivers[i+1:]...)
 		}
 	}
-
 }

@@ -21,6 +21,7 @@ var GrpcAddr = ":9093"
 
 func main() {
 	rabbitMqURI := env.GetString("RABBITMQ_URI", "amqp://guest:guest@rabbitmq:5672/")
+
 	inmemRepo := repository.NewInmemRepository()
 	svc := service.NewService(inmemRepo)
 
@@ -47,6 +48,7 @@ func main() {
 	defer rabbitmq.Close()
 
 	log.Println("Starting RabbitMQ connection")
+
 	publisher := events.NewTripEventPublisher(rabbitmq)
 
 	// Start driver consumer

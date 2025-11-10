@@ -5,3 +5,4 @@ metadata:
 data:
   ENVIRONMENT: "development"
   GATEWAY_HTTP_ADDR: ":8081"
+  RABBITMQ_URI: "amqp://guest:guest@rabbitmq:5672/"

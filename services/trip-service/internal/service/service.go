@@ -10,6 +10,7 @@ import (
 	"ride-sharing/services/trip-service/internal/domain"
 	tripTypes "ride-sharing/services/trip-service/pkg/types"
 	"ride-sharing/shared/env"
+	pbd "ride-sharing/shared/proto/driver"
 	"ride-sharing/shared/proto/trip"
 	"ride-sharing/shared/types"
 
@@ -65,10 +66,8 @@ func (s *service) GetRoute(ctx context.Context, pickup, destination *types.Coord
 		}, nil
 	}
 
-
 	// or use their self hosted API (check the course lesson: "Preparing for External API Failures")
 	baseURL := env.GetString("OSRM_API", "http://router.project-osrm.org")
-
 
 	url := fmt.Sprintf(
 		"%s/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson",
@@ -189,4 +188,12 @@ func getBaseFares() []*domain.RideFareModel {
 			TotalPriceInCents: 1000,
 		},
 	}
+}
+
+func (s *service) GetTripByID(ctx context.Context, id string) (*domain.TripModel, error) {
+	return s.repo.GetTripByID(ctx, id)
+}
+
+func (s *service) UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error {
+	return s.repo.UpdateTrip(ctx, tripID, status, driver)
 }

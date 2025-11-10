@@ -48,7 +48,7 @@ k8s_resource('api-gateway', port_forwards=8081,
 
 trip_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/trip-service ./services/trip-service/cmd/main.go'
 if os.name == 'nt':
- trip_compile_cmd = './infra/development/docker/trip-build.bat'
+  trip_compile_cmd = './infra/development/docker/trip-build.bat'
 
 local_resource(
   'trip-service-compile',
@@ -78,7 +78,7 @@ k8s_resource('trip-service', resource_deps=['trip-service-compile', 'rabbitmq'],
 
 driver_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/driver-service ./services/driver-service'
 if os.name == 'nt':
- driver_compile_cmd = './infra/development/docker/driver-build.bat'
+  driver_compile_cmd = './infra/development/docker/driver-build.bat'
 
 local_resource(
   'driver-service-compile',

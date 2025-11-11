@@ -44,6 +44,17 @@ Core business logic for trip lifecycle management. Calculates routes using OSRM 
 
 **Technology**: gRPC, MongoDB, RabbitMQ publisher  
 **Responsibilities**: Route calculation, fare estimation, trip state management, event publishing
+<img width="1912" height="1040" alt="Screenshot from 2025-11-12 03-27-53" src="https://github.com/user-attachments/assets/5d825297-ad2a-400e-8ecf-a9fdc0aa60b6" />
+
+
+#### **DLQ/DLX Queries**
+**Technology**: gRPC, RabbitMQ publisher  
+**Responsibilities**: Dead Letter Queues and Dead Letter Exhange
+<img width="1912" height="1040" alt="Screenshot from 2025-11-12 03-29-48" src="https://github.com/user-attachments/assets/5cb3d4a1-8bfa-4156-98cc-42f6d7036928" />
+<img width="719" height="378" alt="Screenshot from 2025-11-12 03-36-58" src="https://github.com/user-attachments/assets/331e05cc-d4f3-4436-a237-e3a30423172c" /><img width="1920" height="1080" alt="Screenshot from 2025-11-12 03-38-35" src="https://github.com/user-attachments/assets/b97ddf8a-d207-417f-893b-7e3d06499e51" />
+
+
+
 
 #### **Driver Service** (gRPC Port 9092)
 Manages driver operations including real-time location tracking, trip assignment logic, and driver availability. Uses geohash-based spatial indexing for efficient proximity searches.
@@ -252,13 +263,14 @@ This project demonstrates practical experience with:
 **Build issues**: Run `tilt down` then `tilt up` to reset the environment
 
 ## 📝 Notes
-
-- **Course Credit**: This project was built following Tiago Taquelim's microservices course with additional production-oriented enhancements
 - **OSRM API**: Uses public OSRM instance; for production, deploy your own OSRM server
-- **Stripe**: Requires Stripe API keys (test mode) configured in secrets
+- **Stripe**: Requires Stripe API keys (test mode) configured in secrets.
+
+  
 - **MongoDB**: Currently uses in-memory implementation for development; production requires MongoDB Atlas or self-hosted instance
 
 ---
 
 **Built with**: Go · gRPC · RabbitMQ · MongoDB · Kubernetes · Next.js · TypeScript
+
 

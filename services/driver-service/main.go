@@ -83,9 +83,16 @@ func main() {
 	})
 
 	h2Handler := h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
+		contentType := r.Header.Get("Content-Type")
+		log.Printf("[MULTIPLEXER] Request: %s %s | Proto: HTTP/%d.%d | Content-Type: %s | User-Agent: %s",
+			r.Method, r.URL.Path, r.ProtoMajor, r.ProtoMinor, contentType, r.Header.Get("User-Agent"))
+
+		// Check if this is a gRPC request by Content-Type header
+		if strings.HasPrefix(contentType, "application/grpc") {
+			log.Printf("[MULTIPLEXER] Routing to gRPC handler")
 			grpcServer.ServeHTTP(w, r)
 		} else {
+			log.Printf("[MULTIPLEXER] Routing to HTTP handler (health check)")
 			mux.ServeHTTP(w, r)
 		}
 	}), &http2.Server{})

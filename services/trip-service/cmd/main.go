@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	httphandler "ride-sharing/services/trip-service/internal/http"
 	"ride-sharing/services/trip-service/internal/infrastructure/events"
 	"ride-sharing/services/trip-service/internal/infrastructure/grpc"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
@@ -100,10 +101,22 @@ func main() {
 		w.Write([]byte("Trip Service is Healthy"))
 	})
 
+	// Add REST endpoint for trip preview
+	httpHandler := httphandler.NewHandler(svc)
+	mux.HandleFunc("/api/preview", httpHandler.HandlePreview)
+
 	h2Handler := h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
+		contentType := r.Header.Get("Content-Type")
+		log.Printf("[MULTIPLEXER] Request: %s %s | Proto: HTTP/%d.%d | Content-Type: %s | User-Agent: %s",
+			r.Method, r.URL.Path, r.ProtoMajor, r.ProtoMinor, contentType, r.Header.Get("User-Agent"))
+
+		// Check if this is a gRPC request by Content-Type header
+		// Note: We don't strictly require HTTP/2 because Render's load balancer may downgrade
+		if strings.HasPrefix(contentType, "application/grpc") {
+			log.Printf("[MULTIPLEXER] Routing to gRPC handler")
 			grpcServer.ServeHTTP(w, r)
 		} else {
+			log.Printf("[MULTIPLEXER] Routing to HTTP handler (health check)")
 			mux.ServeHTTP(w, r)
 		}
 	}), &http2.Server{})

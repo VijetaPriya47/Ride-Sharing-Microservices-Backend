@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/tracing"
+	"time"
 
 	"github.com/stripe/stripe-go/v81"
 	"github.com/stripe/stripe-go/v81/webhook"
@@ -81,26 +83,65 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Why we need to create a new client for each connection:
-	// because if a service is down, we don't want to block the whole application
-	// so we create a new client for each connection
-	tripService, err := grpc_clients.NewTripServiceClient()
-	if err != nil {
-		log.Fatal(err)
+	// Call the trip service REST API
+	tripServiceURL := env.GetString("TRIP_SERVICE_URL", "http://localhost:8080")
+	apiURL := tripServiceURL + "/api/preview"
+
+	// Prepare the request payload
+	payload := map[string]interface{}{
+		"user_id": reqBody.UserID,
+		"pickup": map[string]float64{
+			"latitude":  reqBody.Pickup.Latitude,
+			"longitude": reqBody.Pickup.Longitude,
+		},
+		"destination": map[string]float64{
+			"latitude":  reqBody.Destination.Latitude,
+			"longitude": reqBody.Destination.Longitude,
+		},
 	}
 
-	// Don't forget to close the client to avoid resource leaks!
-	defer tripService.Close()
-
-	tripPreview, err := tripService.Client.PreviewTrip(ctx, reqBody.toProto())
+	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("DEBUG: gRPC PreviewTrip failed: %v", err)
+		log.Printf("ERROR: Failed to marshal payload: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, "Failed to prepare request")
+		return
+	}
+
+	// Make the HTTP request
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		log.Printf("ERROR: Failed to create request: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, "Failed to create request")
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("ERROR: Failed to call trip service: %v", err)
 		writeJSONError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to preview trip: %v", err))
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		log.Printf("ERROR: Trip service returned status %d: %s", resp.StatusCode, string(bodyBytes))
+		writeJSONError(w, http.StatusInternalServerError, "Trip service error")
+		return
+	}
+
+	// Read and forward the response
+	var tripPreview interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&tripPreview); err != nil {
+		log.Printf("ERROR: Failed to decode trip service response: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, "Failed to decode response")
 		return
 	}
 
 	response := contracts.APIResponse{Data: tripPreview}
-
 	writeJSON(w, http.StatusCreated, response)
 }
 
